@@ -1,6 +1,6 @@
 # Amortization Schedule
 
-Amortized Loans are something that everyone needs at some point deals with in life. 
+Amortized Loans are something that everyone needs at some point in life. 
 Most of the loan calculators didn't have the feature I was looking for, and tend to divert you to some lender instead.
 I just wanted something that was simple to comprehend and removed all the distractions.
 Nothing fancy here just a static html site
