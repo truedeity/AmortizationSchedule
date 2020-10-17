@@ -1,4 +1,9 @@
 # Amortization Schedule
 
 
-![Image of Yaktocat](https://github.com/truedeity/AmortizationSchedule/raw/main/screenshot.png)
+![Screenshot](https://github.com/truedeity/AmortizationSchedule/raw/main/screenshot.png)
+
+
+https://truedeity.github.io/AmortizationSchedule/
+
+
