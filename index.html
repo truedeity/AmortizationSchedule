@@ -100,12 +100,15 @@
                         </tr>
                     </thead>
                     <tbody>
-        
+
                     </tbody>
                 </table>
             </div>
         </div>
-       
+
+        <a id="dlink"  style="display:none;"></a>
+
+        <input type="button" class="btn btn-info" disabled="disabled" onclick="tableToExcel('results', 'Amortization Schedule', 'Amortization.xls')" value="Export to Excel">
     </div>
 
 
@@ -125,10 +128,10 @@
 
 
         function Calculate() {
-
+            $("input").removeAttr("disabled")
             var balance = formatter.format(parseFloat($("#LoanAmount").val()));
             $("#results tbody tr").remove();
-            var str = "<tr><td colspan='6'></td><td style='font-weight:bold;'>"+ balance +"</td></tr>"
+            var str = "<tr><td colspan='6'></td><td style='font-weight:bold;'>" + balance + "</td></tr>"
             $("#results").find('tbody').append(str);
 
             var paymentDate = $("#PaymentDate").val();
@@ -155,11 +158,11 @@
                 totalInterestPayments += interestPayment;
 
                 CreateEntry(
-                    paymentNumber, 
-                    getFormattedDate(new Date(paymentDate).addMonths(paymentNumber)), 
-                    formatter.format(monthlyPayment), 
-                    formatter.format(interestPayment), 
-                    formatter.format(principalPayment), 
+                    paymentNumber,
+                    getFormattedDate(new Date(paymentDate).addMonths(paymentNumber)),
+                    formatter.format(monthlyPayment),
+                    formatter.format(interestPayment),
+                    formatter.format(principalPayment),
                     formatter.format(runningAmount)
                 );
 
@@ -172,7 +175,7 @@
 
 
         function CalculateMonthlyPayment(p, n, i) {
-            if(i == 0) return p/n;
+            if (i == 0) return p / n;
 
             return p * i * (Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
         }
@@ -192,7 +195,7 @@
             $("#results").find('tbody').append(str);
         }
 
-      
+
         function DiscountFactor(rate, numOfPeriods) {
             var dfs = [], discountFactor;
             for (var i = 1; i <= numOfPeriods; i++) {
@@ -212,6 +215,21 @@
             return month + '/' + day + '/' + year;
         }
 
+        var tableToExcel = (function () {
+            var uri = 'data:application/vnd.ms-excel;base64,'
+                , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+                , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+                , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+            return function (table, name, filename) {
+                if (!table.nodeType) table = document.getElementById(table)
+                var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
+
+                document.getElementById("dlink").href = uri + base64(format(template, ctx));
+                document.getElementById("dlink").download = filename;
+                document.getElementById("dlink").click();
+
+            }
+        })()
 
     </script>
 </body>
