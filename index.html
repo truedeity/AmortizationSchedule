@@ -155,6 +155,7 @@
             var ratePerPeriod = ((1 + Math.pow(interestRate / indexPeriods[compoundPeriod], indexPeriods[compoundPeriod] / periodsPerYear)) - 1);
             var df = DiscountFactor(interestRate / periodsPerYear, numberOfPayments)
             var discountFactor = df.reduce((a, b) => { return a + b; });
+            var monthlyPaymentOrig = CalculateMonthlyPayment(loanAmount, numberOfPayments, interestRate / 100 / 12);
             var monthlyPayment = CalculateMonthlyPayment(loanAmount, numberOfPayments, interestRate / 100 / 12);
 
             var totalInterestPayments = 0;
@@ -188,7 +189,7 @@
             }
 
             $("#ratePerPeriod").text(parseFloat(ratePerPeriod).toFixed(3) + "%");
-            $("#paymentAmt").text(formatter.format(monthlyPayment));
+            $("#paymentAmt").text(formatter.format(monthlyPaymentOrig));
             $("#totalInterest").text(formatter.format(totalInterestPayments));
         }
 
