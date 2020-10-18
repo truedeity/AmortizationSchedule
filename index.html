@@ -106,9 +106,10 @@
             </div>
         </div>
 
-        <a id="dlink"  style="display:none;"></a>
+        <a id="dlink" style="display:none;"></a>
 
-        <input type="button" class="btn btn-info" disabled="disabled" onclick="tableToExcel('results', 'Amortization Schedule', 'Amortization.xls')" value="Export to Excel">
+        <input type="button" class="btn btn-info" disabled="disabled"
+            onclick="tableToExcel('results', 'Amortization Schedule', 'Amortization.xls')" value="Export to Excel">
     </div>
 
 
@@ -123,7 +124,15 @@
             // maximumFractionDigits: 0,
         });
 
-
+        var delay = (function () {
+            var timer = null;
+            return function (callback, ms) {
+                clearTimeout(timer);
+                timer = setTimeout(() => {
+                    callback();
+                }, ms);
+            }
+        })();
 
 
 
@@ -150,10 +159,18 @@
 
             var totalInterestPayments = 0;
             for (var paymentNumber = 1; paymentNumber <= numberOfPayments; paymentNumber++) {
-
-
+                var terminate = false;
+                var additionalPaymentAmount = GetAdditionalPayment(paymentNumber);
                 var interestPayment = ratePerPeriod * runningAmount * .01;
-                var principalPayment = monthlyPayment - interestPayment;
+
+                if(runningAmount - principalPayment < 0) {
+                    monthlyPayment =  runningAmount + interestPayment;
+                    additionalPaymentAmount = 0;
+                    terminate = true;
+                }
+
+                var principalPayment = (monthlyPayment + additionalPaymentAmount) - interestPayment;
+                
                 runningAmount = runningAmount - principalPayment;
                 totalInterestPayments += interestPayment;
 
@@ -161,10 +178,12 @@
                     paymentNumber,
                     getFormattedDate(new Date(paymentDate).addMonths(paymentNumber)),
                     formatter.format(monthlyPayment),
+                    additionalPaymentAmount,
                     formatter.format(interestPayment),
                     formatter.format(principalPayment),
                     formatter.format(runningAmount)
                 );
+                if(terminate) break;
 
             }
 
@@ -181,12 +200,12 @@
         }
 
 
-        function CreateEntry(num, dueDt, payDue, interest, principal, balance) {
+        function CreateEntry(num, dueDt, payDue, addtlPay, interest, principal, balance) {
             var str = "<tr>" +
                 "<td>" + num + "</td>" +
                 "<td>" + dueDt + "</td>" +
                 "<td>" + payDue + "</td>" +
-                "<td></td>" +
+                "<td> <input type='text' data-pmtnumber='" + num + "' name='additionalPayment' onkeyup='additionalPaymentKeyUp(this)' value='" + addtlPay + "'></input> </td>" +
                 "<td>" + interest + "</td>" +
                 "<td>" + principal + "</td>" +
                 "<td>" + balance + "</td>" +
@@ -206,6 +225,61 @@
             return dfs;
         };
 
+        function GetAdditionalPayment(paymentNumber) {
+            var additionalPaymentAmount = 0;
+            var storageData = localStorage.getItem("additionalPayments");
+
+            if (storageData && storageData.indexOf('{') > -1) {
+                var jsonStored = JSON.parse(storageData);
+                for (var item in jsonStored) {
+                    if (jsonStored[item].paymentNumber == paymentNumber) {
+                        additionalPaymentAmount = parseFloat(jsonStored[item].additionalPayment);
+                    }
+                }
+            }
+
+            return additionalPaymentAmount;
+        }
+
+        function additionalPaymentKeyUp(input) {
+            delay(() => {
+                var tr = $(input).parent().parent();
+                var additionalPaymentAmount = $(input).val();
+                var paymentNumber = parseInt($(input).data("pmtnumber"));
+
+                var data = {
+                    paymentNumber: paymentNumber,
+                    additionalPayment: isNaN(additionalPaymentAmount) ? 0 : additionalPaymentAmount
+                };
+
+                var storageData = localStorage.getItem("additionalPayments");
+
+                if (storageData && storageData.indexOf('{') > -1) {
+
+                    var jsonStored = JSON.parse(storageData);
+                    var isUpdated = false;
+                    for (var item in jsonStored) {
+                        if (jsonStored[item].paymentNumber == data.paymentNumber) {
+                            jsonStored[item].additionalPayment = data.additionalPayment;
+                            isUpdated = true;
+                        }
+                    }
+                    if (!isUpdated) {
+                        jsonStored.push(data);
+                    }
+                    localStorage.setItem("additionalPayments", JSON.stringify(jsonStored));
+                } else {
+                    var save = [];
+                    save.push(data);
+                    localStorage.setItem("additionalPayments", JSON.stringify(save));
+                }
+
+                storageData = localStorage.getItem("additionalPayments");
+
+                console.log(storageData);
+                Calculate();
+            }, 1000)
+        }
 
         function getFormattedDate(date) {
             var year = date.getFullYear();
