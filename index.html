@@ -87,7 +87,7 @@
         </div>
         <div class="row">
             <div class="col-md-12">
-                <table id="results" class="table table-dark">
+                <table id="results" class="table table-dark table-small">
                     <thead>
                         <tr>
                             <td>No.</td>
@@ -163,7 +163,7 @@
                 var terminate = false;
                 var additionalPaymentAmount = GetAdditionalPayment(paymentNumber);
                 
-                if(runningAmount - principalPayment < 0) {
+                if(runningAmount - ((monthlyPayment + additionalPaymentAmount) - ratePerPeriod * runningAmount * .01) < 0) {
                     monthlyPayment =  runningAmount + ratePerPeriod * runningAmount * .01;
                     additionalPaymentAmount = 0;
                     terminate = true;
