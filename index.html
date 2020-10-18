@@ -161,14 +161,14 @@
             for (var paymentNumber = 1; paymentNumber <= numberOfPayments; paymentNumber++) {
                 var terminate = false;
                 var additionalPaymentAmount = GetAdditionalPayment(paymentNumber);
-                var interestPayment = ratePerPeriod * runningAmount * .01;
-
+                
                 if(runningAmount - principalPayment < 0) {
-                    monthlyPayment =  runningAmount + interestPayment;
+                    monthlyPayment =  runningAmount + ratePerPeriod * runningAmount * .01;
                     additionalPaymentAmount = 0;
                     terminate = true;
                 }
-
+                
+                var interestPayment = ratePerPeriod * runningAmount * .01;
                 var principalPayment = (monthlyPayment + additionalPaymentAmount) - interestPayment;
                 
                 runningAmount = runningAmount - principalPayment;
