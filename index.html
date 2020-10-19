@@ -16,7 +16,14 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
         crossorigin="anonymous"></script>
-
+    <style>
+        td {
+            font-weight: bold;
+        }
+        table thead {
+            background-color: #ccc;
+        }
+    </style>
 
     <script src="dateStuff.js" type="text/javascript"></script>
 
@@ -40,14 +47,14 @@
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="basic-addon3">Loan Amount:</span>
                     </div>
-                    <input type="text" id="LoanAmount" value="10000" data-type='currency' />
+                    <input type="text" class="form-control" id="LoanAmount" value="10000" data-type='currency' />
 
                 </div>
                 <div class="input-group mb-3">
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="basic-addon3">Interest Rate:</span>
                     </div>
-                    <input type="text" id="InterestRate" value="3.5" />
+                    <input type="text" class="form-control" id="InterestRate" value="3.5" />
                 </div>
             </div>
             <div class="col-md-4">
@@ -56,20 +63,20 @@
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="basic-addon3">Years:</span>
                     </div>
-                    <input type="number" id="years" value="1" />
+                    <input type="number" class="form-control" id="years" value="1" />
                 </div>
                 <div class="input-group mb-3">
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="basic-addon3">Date:</span>
                     </div>
-                    <input type="date" id="PaymentDate" value="2020-10-15" />
+                    <input type="date" class="form-control" id="PaymentDate" value="2020-10-15" />
                     &nbsp;
-                    <button id="calcualte" class="btn btn-secondary" onclick="javascript:Calculate()">Calculate</button>
+                    <button id="calcualte"  class="btn btn-secondary" onclick="javascript:Calculate()">Calculate</button>
                 </div>
 
             </div>
             <div class="col-md-4">
-                <table class="table table-dark">
+                <table class="table ">
                     <tr>
                         <td>Payment Amount: <span class="float-right" style="font-weight: bold;" id="paymentAmt"></span>
                         </td>
@@ -87,7 +94,7 @@
         </div>
         <div class="row">
             <div class="col-md-12">
-                <table id="results" class="table table-dark table-small">
+                <table id="results" class="table ">
                     <thead>
                         <tr>
                             <td>No.</td>
@@ -162,16 +169,16 @@
             for (var paymentNumber = 1; paymentNumber <= numberOfPayments; paymentNumber++) {
                 var terminate = false;
                 var additionalPaymentAmount = GetAdditionalPayment(paymentNumber);
-                
-                if(runningAmount - ((monthlyPayment + additionalPaymentAmount) - ratePerPeriod * runningAmount * .01) < 0) {
-                    monthlyPayment =  runningAmount + ratePerPeriod * runningAmount * .01;
+
+                if (runningAmount - ((monthlyPayment + additionalPaymentAmount) - ratePerPeriod * runningAmount * .01) < 0) {
+                    monthlyPayment = runningAmount + ratePerPeriod * runningAmount * .01;
                     additionalPaymentAmount = 0;
                     terminate = true;
                 }
-                
+
                 var interestPayment = ratePerPeriod * runningAmount * .01;
                 var principalPayment = (monthlyPayment + additionalPaymentAmount) - interestPayment;
-                
+
                 runningAmount = runningAmount - principalPayment;
                 totalInterestPayments += interestPayment;
 
@@ -184,7 +191,7 @@
                     formatter.format(principalPayment),
                     formatter.format(runningAmount)
                 );
-                if(terminate) break;
+                if (terminate) break;
 
             }
 
@@ -206,7 +213,7 @@
                 "<td>" + num + "</td>" +
                 "<td>" + dueDt + "</td>" +
                 "<td>" + payDue + "</td>" +
-                "<td> <input type='text' data-pmtnumber='" + num + "' name='additionalPayment' onkeyup='additionalPaymentKeyUp(this)' value='" + addtlPay + "'></input> </td>" +
+                "<td> <input type='text' data-pmtnumber='" + num + "' name='additionalPayment' class='form-control' onkeyup='additionalPaymentKeyUp(this)' value='" + addtlPay + "'></input> </td>" +
                 "<td>" + interest + "</td>" +
                 "<td>" + principal + "</td>" +
                 "<td>" + balance + "</td>" +
@@ -244,40 +251,44 @@
 
         function additionalPaymentKeyUp(input) {
             delay(() => {
-                var tr = $(input).parent().parent();
-                var additionalPaymentAmount = $(input).val();
-                var paymentNumber = parseInt($(input).data("pmtnumber"));
+                var trs = $("#results tr");
+                $.each(trs, (index, tr) => {
+                    var additionalPaymentAmount = $(tr).find("input").val();
+                    var paymentNumber = parseInt($(tr).find("input").data("pmtnumber"));
+                    var data = {
+                        paymentNumber: paymentNumber,
+                        additionalPayment: isNaN(additionalPaymentAmount) ? 0 : additionalPaymentAmount
+                    };
 
-                var data = {
-                    paymentNumber: paymentNumber,
-                    additionalPayment: isNaN(additionalPaymentAmount) ? 0 : additionalPaymentAmount
-                };
+                    var storageData = localStorage.getItem("additionalPayments");
 
-                var storageData = localStorage.getItem("additionalPayments");
+                    if (storageData && storageData.indexOf('{') > -1) {
 
-                if (storageData && storageData.indexOf('{') > -1) {
-
-                    var jsonStored = JSON.parse(storageData);
-                    var isUpdated = false;
-                    for (var item in jsonStored) {
-                        if (jsonStored[item].paymentNumber == data.paymentNumber) {
-                            jsonStored[item].additionalPayment = data.additionalPayment;
-                            isUpdated = true;
+                        var jsonStored = JSON.parse(storageData);
+                        var isUpdated = false;
+                        for (var item in jsonStored) {
+                            if (jsonStored[item].paymentNumber == data.paymentNumber) {
+                                jsonStored[item].additionalPayment = data.additionalPayment;
+                                isUpdated = true;
+                            }
                         }
+                        if (!isUpdated) {
+                            jsonStored.push(data);
+                        }
+                        localStorage.setItem("additionalPayments", JSON.stringify(jsonStored));
+                    } else {
+                        var save = [];
+                        save.push(data);
+                        localStorage.setItem("additionalPayments", JSON.stringify(save));
                     }
-                    if (!isUpdated) {
-                        jsonStored.push(data);
-                    }
-                    localStorage.setItem("additionalPayments", JSON.stringify(jsonStored));
-                } else {
-                    var save = [];
-                    save.push(data);
-                    localStorage.setItem("additionalPayments", JSON.stringify(save));
-                }
 
-                storageData = localStorage.getItem("additionalPayments");
+                    storageData = localStorage.getItem("additionalPayments");
 
-                console.log(storageData);
+                    console.log(storageData);
+
+                });
+                
+
                 Calculate();
             }, 1000)
         }
