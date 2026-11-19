@@ -28,6 +28,14 @@
         table thead {
             background-color: #ccc;
         }
+        .summary td { font-weight: normal; }
+        .summary span { font-weight: bold; }
+        .extras { border: 1px solid #dee2e6; border-radius: .4rem; padding: .75rem .75rem .25rem; }
+        .extras-title { font-weight: bold; margin-bottom: .5rem; }
+        .extras-title small { font-weight: normal; opacity: .7; }
+        #ExtraLump { min-width: 5.5rem; }
+        .savings { color: #1e7e34; margin: .25rem 0 .5rem; }
+        #results input.typed { border-color: #17a2b8; }
         .theme-toggle {
             margin-left: 1rem;
             padding: .1rem .55rem;
@@ -45,6 +53,10 @@
         html[data-theme="dark"] .form-control { background-color: #1b1e24; color: #e4e6eb; border-color: #3a3f4b; }
         html[data-theme="dark"] .form-control:focus { background-color: #1b1e24; color: #e4e6eb; border-color: #6cb6ff; box-shadow: 0 0 0 .2rem rgba(108, 182, 255, .25); }
         html[data-theme="dark"] .btn-secondary { background-color: #3a3f4b; border-color: #3a3f4b; }
+        html[data-theme="dark"] .extras { border-color: #2c3038; }
+        html[data-theme="dark"] .savings { color: #5fd38d; }
+        html[data-theme="dark"] .custom-select { background-color: #262a33; color: #c9ccd3; border-color: #3a3f4b; }
+        html[data-theme="dark"] .alert-danger { background-color: #3a1d20; color: #ffb3b8; border-color: #5c2a30; }
         html[data-theme="dark"] .btn-outline-secondary { color: #c9ccd3; border-color: #3a3f4b; }
     </style>
 
@@ -71,53 +83,81 @@
             <div class="col-md-4">
                 <div class="input-group mb-3">
                     <div class="input-group-prepend">
-                        <span class="input-group-text" id="basic-addon3">Loan Amount:</span>
+                        <span class="input-group-text">Loan Amount:</span>
                     </div>
-                    <input type="text" class="form-control" id="LoanAmount" value="10000" data-type='currency' />
-
+                    <input type="text" class="form-control loan-input" id="LoanAmount" value="10,000" inputmode="decimal" />
                 </div>
                 <div class="input-group mb-3">
                     <div class="input-group-prepend">
-                        <span class="input-group-text" id="basic-addon3">Interest Rate:</span>
+                        <span class="input-group-text">Interest Rate:</span>
                     </div>
-                    <input type="text" class="form-control" id="InterestRate" value="3.5" />
+                    <input type="text" class="form-control loan-input" id="InterestRate" value="3.5" inputmode="decimal" />
+                    <div class="input-group-append"><span class="input-group-text">%</span></div>
                 </div>
             </div>
             <div class="col-md-4">
-
                 <div class="input-group mb-3">
                     <div class="input-group-prepend">
-                        <span class="input-group-text" id="basic-addon3">Years:</span>
+                        <span class="input-group-text">Term:</span>
                     </div>
-                    <input type="number" class="form-control" id="years" value="1" />
+                    <input type="number" class="form-control loan-input" id="Term" value="1" min="1" step="1" />
+                    <div class="input-group-append">
+                        <select class="custom-select loan-input" id="TermUnit">
+                            <option value="years">years</option>
+                            <option value="months">months</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="input-group mb-3">
                     <div class="input-group-prepend">
-                        <span class="input-group-text" id="basic-addon3">Date:</span>
+                        <span class="input-group-text">Loan Date:</span>
                     </div>
-                    <input type="date" class="form-control" id="PaymentDate" value="2020-10-15" />
+                    <input type="date" class="form-control loan-input" id="PaymentDate" />
                     &nbsp;
-                    <button id="calcualte"  class="btn btn-secondary" onclick="javascript:Calculate()">Calculate</button>
+                    <button id="calculate" class="btn btn-secondary" onclick="Calculate()">Calculate</button>
                 </div>
-
             </div>
             <div class="col-md-4">
-                <table class="table ">
-                    <tr>
-                        <td>Payment Amount: <span class="float-right" style="font-weight: bold;" id="paymentAmt"></span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Rate Per Period: <span class="float-right" id="ratePerPeriod"></span></td>
-                    </tr>
-                    <tr>
-                        <td>Total Interest: <span class="float-right" id="totalInterest"></span></td>
-                    </tr>
+                <table class="table summary">
+                    <tr><td>Payment Amount: <span class="float-right" id="paymentAmt"></span></td></tr>
+                    <tr><td>Rate Per Period: <span class="float-right" id="ratePerPeriod"></span></td></tr>
+                    <tr><td>Total Interest: <span class="float-right" id="totalInterest"></span></td></tr>
+                    <tr><td>Payoff Date: <span class="float-right" id="payoffDate"></span></td></tr>
                 </table>
             </div>
-
-
         </div>
+
+        <div class="extras mb-3">
+            <div class="extras-title">Extra payments <small>(on top of the regular payment; you can also type an amount into any row below)</small>
+                <button type="button" class="btn btn-sm btn-outline-secondary float-right" onclick="ClearExtras()">Clear extras</button>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="input-group mb-2">
+                        <div class="input-group-prepend"><span class="input-group-text">Every month +$</span></div>
+                        <input type="text" class="form-control loan-input" id="ExtraMonthly" placeholder="0" inputmode="decimal" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group mb-2">
+                        <div class="input-group-prepend"><span class="input-group-text">Once a year +$</span></div>
+                        <input type="text" class="form-control loan-input" id="ExtraYearly" placeholder="0" inputmode="decimal" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group mb-2">
+                        <div class="input-group-prepend"><span class="input-group-text">One time +$</span></div>
+                        <input type="text" class="form-control loan-input" id="ExtraLump" placeholder="0" inputmode="decimal" />
+                        <div class="input-group-prepend input-group-append"><span class="input-group-text">at payment #</span></div>
+                        <input type="number" class="form-control loan-input" id="ExtraLumpAt" placeholder="1" min="1" step="1" style="flex: 0 0 5rem;" />
+                    </div>
+                </div>
+            </div>
+            <div id="savings" class="savings" hidden></div>
+        </div>
+
+        <div id="error" class="alert alert-danger" hidden></div>
+
         <div class="row">
             <div class="col-md-12">
                 <table id="results" class="table ">
@@ -141,191 +181,212 @@
 
         <a id="dlink" style="display:none;"></a>
 
-        <input type="button" class="btn btn-info" disabled="disabled"
+        <input type="button" id="exportBtn" class="btn btn-info" disabled="disabled"
             onclick="tableToExcel('results', 'Amortization Schedule', 'Amortization.xls')" value="Export to Excel">
     </div>
 
 
     <script type="text/javascript">
 
-        var formatter = new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
+        var formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+        var STORE_KEY = 'amortization-v2';
 
-            // These options are needed to round to whole numbers if that's what you want.
-            // minimumFractionDigits: 0,
-            // maximumFractionDigits: 0,
-        });
+        function loadStore() {
+            try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
+        }
+        function saveStore(store) {
+            try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) { }
+        }
+
+        // Accepts "10,000", "$10,000.50", "6.9%".
+        function parseNumber(value) {
+            var cleaned = String(value || '').replace(/[$,%\s]/g, '');
+            return cleaned === '' ? NaN : Number(cleaned);
+        }
+        function parseExtra(value) {
+            var n = parseNumber(value);
+            return isNaN(n) || n < 0 ? 0 : n;
+        }
+        // "2026-11-18" -> local date (new Date("2026-11-18") would be UTC midnight, i.e. the day before in the US).
+        function parseLocalDate(value) {
+            var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
+            return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+        }
+        function todayIso() {
+            var d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+        function addMonths(date, months) {
+            return new Date(date.getTime()).addMonths(months);
+        }
+        function getFormattedDate(date) {
+            return String(date.getMonth() + 1).padStart(2, '0') + '/' + String(date.getDate()).padStart(2, '0') + '/' + date.getFullYear();
+        }
+        function plural(n, word) {
+            return n + ' ' + word + (n === 1 ? '' : 's');
+        }
+
+        function readInputs() {
+            var term = parseNumber($('#Term').val());
+            var unit = $('#TermUnit').val();
+            return {
+                amount: parseNumber($('#LoanAmount').val()),
+                rate: parseNumber($('#InterestRate').val()),
+                months: unit === 'months' ? Math.round(term) : Math.round(term * 12),
+                date: $('#PaymentDate').val(),
+                extraMonthly: parseExtra($('#ExtraMonthly').val()),
+                extraYearly: parseExtra($('#ExtraYearly').val()),
+                extraLump: parseExtra($('#ExtraLump').val()),
+                extraLumpAt: Math.round(parseNumber($('#ExtraLumpAt').val())) || 1
+            };
+        }
+
+        function validate(loan) {
+            if (!(loan.amount > 0)) return 'Enter a loan amount greater than 0.';
+            if (isNaN(loan.rate) || loan.rate < 0 || loan.rate >= 100) return 'Enter an interest rate between 0 and 100%.';
+            if (!(loan.months >= 1) || loan.months > 600) return 'Enter a term between 1 month and 50 years.';
+            if (!parseLocalDate(loan.date)) return 'Pick a loan date.';
+            return '';
+        }
+
+        // Row-by-row extra amounts the user typed, kept per loan so another loan doesn't inherit them.
+        function loanKey(loan) {
+            return [loan.amount, loan.rate, loan.months, loan.date].join('|');
+        }
+        function rowOverrides(loan) {
+            var store = loadStore();
+            return (store.rows && store.rows[loanKey(loan)]) || {};
+        }
+
+        function monthlyPayment(principal, monthlyRate, months) {
+            if (monthlyRate === 0) return principal / months;
+            return principal * monthlyRate / (1 - Math.pow(1 + monthlyRate, -months));
+        }
+
+        function buildSchedule(loan, useExtras) {
+            var i = loan.rate / 100 / 12;
+            var payment = monthlyPayment(loan.amount, i, loan.months);
+            var overrides = useExtras ? rowOverrides(loan) : {};
+            var start = parseLocalDate(loan.date);
+            var balance = loan.amount, totalInterest = 0, rows = [];
+            for (var n = 1; n <= loan.months && balance > 0.005; n++) {
+                var interest = balance * i;
+                var due = Math.min(payment, balance + interest);
+                var principal = due - interest;
+                var extra = 0;
+                if (useExtras) {
+                    extra = loan.extraMonthly
+                        + (n % 12 === 0 ? loan.extraYearly : 0)
+                        + (n === loan.extraLumpAt ? loan.extraLump : 0);
+                    if (overrides[n] !== undefined) extra = overrides[n];
+                }
+                extra = Math.max(0, Math.min(extra, balance - principal));
+                balance = Math.max(0, balance - principal - extra);
+                totalInterest += interest;
+                rows.push({ n: n, date: addMonths(start, n), due: due, extra: extra, interest: interest, principal: principal + extra, balance: balance });
+            }
+            return { payment: payment, ratePerPeriod: i * 100, totalInterest: totalInterest, rows: rows };
+        }
+
+        function Calculate() {
+            var loan = readInputs();
+            var error = validate(loan);
+            $('#error').text(error).prop('hidden', !error);
+            if (error) return;
+
+            var store = loadStore();
+            store.inputs = {
+                amount: $('#LoanAmount').val(), rate: $('#InterestRate').val(), term: $('#Term').val(), unit: $('#TermUnit').val(),
+                date: $('#PaymentDate').val(), extraMonthly: $('#ExtraMonthly').val(), extraYearly: $('#ExtraYearly').val(),
+                extraLump: $('#ExtraLump').val(), extraLumpAt: $('#ExtraLumpAt').val()
+            };
+            saveStore(store);
+
+            var plan = buildSchedule(loan, true);
+            var base = buildSchedule(loan, false);
+            var overrides = rowOverrides(loan);
+
+            var tbody = $('#results tbody').empty();
+            tbody.append("<tr><td colspan='6'></td><td style='font-weight:bold;'>" + formatter.format(loan.amount) + "</td></tr>");
+            plan.rows.forEach(function (r) {
+                var typed = overrides[r.n] !== undefined;
+                tbody.append('<tr>' +
+                    '<td>' + r.n + '</td>' +
+                    '<td>' + getFormattedDate(r.date) + '</td>' +
+                    '<td>' + formatter.format(r.due) + '</td>' +
+                    "<td><input type='text' inputmode='decimal' class='form-control" + (typed ? " typed" : "") + "' data-pmtnumber='" + r.n +
+                    "' onkeyup='additionalPaymentKeyUp(this)' value='" + (r.extra ? r.extra.toFixed(2) : '0') + "'></td>" +
+                    '<td>' + formatter.format(r.interest) + '</td>' +
+                    '<td>' + formatter.format(r.principal) + '</td>' +
+                    '<td>' + formatter.format(r.balance) + '</td>' +
+                    '</tr>');
+            });
+
+            var last = plan.rows[plan.rows.length - 1];
+            $('#paymentAmt').text(formatter.format(plan.payment));
+            $('#ratePerPeriod').text(plan.ratePerPeriod.toFixed(3) + '%');
+            $('#totalInterest').text(formatter.format(plan.totalInterest));
+            $('#payoffDate').text(getFormattedDate(last.date) + ' (' + plural(plan.rows.length, 'payment') + ')');
+
+            var monthsSaved = base.rows.length - plan.rows.length;
+            var interestSaved = base.totalInterest - plan.totalInterest;
+            if (interestSaved > 0.005) {
+                $('#savings').html('With extra payments: paid off <b>' + plural(monthsSaved, 'month') + ' early</b> on <b>' +
+                    getFormattedDate(last.date) + '</b> &middot; <b>' + formatter.format(interestSaved) + '</b> interest saved').prop('hidden', false);
+            } else {
+                $('#savings').prop('hidden', true);
+            }
+            $('#exportBtn').prop('disabled', false);
+        }
 
         var delay = (function () {
             var timer = null;
             return function (callback, ms) {
                 clearTimeout(timer);
-                timer = setTimeout(() => {
-                    callback();
-                }, ms);
-            }
+                timer = setTimeout(callback, ms);
+            };
         })();
 
-
-
-        function Calculate() {
-            $("input").removeAttr("disabled")
-            var balance = formatter.format(parseFloat($("#LoanAmount").val()));
-            $("#results tbody tr").remove();
-            var str = "<tr><td colspan='6'></td><td style='font-weight:bold;'>" + balance + "</td></tr>"
-            $("#results").find('tbody').append(str);
-
-            var paymentDate = $("#PaymentDate").val();
-            var loanAmount = parseFloat($("#LoanAmount").val()).toFixed(2);
-            var interestRate = parseFloat($("#InterestRate").val()).toFixed(2);
-            var years = parseFloat($("#years").val()).toFixed(2);
-            var compoundPeriod = 4; // monthly
-            var periodsPerYear = 12;
-            var runningAmount = loanAmount;
-            var numberOfPayments = years * periodsPerYear;
-            var indexPeriods = [1, 2, 4, 6, 12, 24, 26, 52];
-            var ratePerPeriod = ((1 + Math.pow(interestRate / indexPeriods[compoundPeriod], indexPeriods[compoundPeriod] / periodsPerYear)) - 1);
-            var df = DiscountFactor(interestRate / periodsPerYear, numberOfPayments)
-            var discountFactor = df.reduce((a, b) => { return a + b; });
-            var monthlyPaymentOrig = CalculateMonthlyPayment(loanAmount, numberOfPayments, interestRate / 100 / 12);
-            var monthlyPayment = CalculateMonthlyPayment(loanAmount, numberOfPayments, interestRate / 100 / 12);
-
-            var totalInterestPayments = 0;
-            for (var paymentNumber = 1; paymentNumber <= numberOfPayments; paymentNumber++) {
-                var terminate = false;
-                var additionalPaymentAmount = GetAdditionalPayment(paymentNumber);
-
-                if (runningAmount - ((monthlyPayment + additionalPaymentAmount) - ratePerPeriod * runningAmount * .01) < 0) {
-                    monthlyPayment = runningAmount + ratePerPeriod * runningAmount * .01;
-                    additionalPaymentAmount = 0;
-                    terminate = true;
-                }
-
-                var interestPayment = ratePerPeriod * runningAmount * .01;
-                var principalPayment = (monthlyPayment + additionalPaymentAmount) - interestPayment;
-
-                runningAmount = runningAmount - principalPayment;
-                totalInterestPayments += interestPayment;
-
-                CreateEntry(
-                    paymentNumber,
-                    getFormattedDate(new Date(paymentDate).addMonths(paymentNumber)),
-                    formatter.format(monthlyPayment),
-                    additionalPaymentAmount,
-                    formatter.format(interestPayment),
-                    formatter.format(principalPayment),
-                    formatter.format(runningAmount)
-                );
-                if (terminate) break;
-
-            }
-
-            $("#ratePerPeriod").text(parseFloat(ratePerPeriod).toFixed(3) + "%");
-            $("#paymentAmt").text(formatter.format(monthlyPaymentOrig));
-            $("#totalInterest").text(formatter.format(totalInterestPayments));
-        }
-
-
-        function CalculateMonthlyPayment(p, n, i) {
-            if (i == 0) return p / n;
-
-            return p * i * (Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
-        }
-
-
-        function CreateEntry(num, dueDt, payDue, addtlPay, interest, principal, balance) {
-            var str = "<tr>" +
-                "<td>" + num + "</td>" +
-                "<td>" + dueDt + "</td>" +
-                "<td>" + payDue + "</td>" +
-                "<td> <input type='text' data-pmtnumber='" + num + "' name='additionalPayment' class='form-control' onkeyup='additionalPaymentKeyUp(this)' value='" + addtlPay + "'></input> </td>" +
-                "<td>" + interest + "</td>" +
-                "<td>" + principal + "</td>" +
-                "<td>" + balance + "</td>" +
-                "</tr>"
-
-            $("#results").find('tbody').append(str);
-        }
-
-
-        function DiscountFactor(rate, numOfPeriods) {
-            var dfs = [], discountFactor;
-            for (var i = 1; i <= numOfPeriods; i++) {
-                discountFactor = 1 / Math.pow((1 + rate / 100), (i - 1));
-                roundedDiscountFactor = Math.ceil(discountFactor * 1000) / 1000;
-                dfs.push(roundedDiscountFactor);
-            }
-            return dfs;
-        };
-
-        function GetAdditionalPayment(paymentNumber) {
-            var additionalPaymentAmount = 0;
-            var storageData = localStorage.getItem("additionalPayments");
-
-            if (storageData && storageData.indexOf('{') > -1) {
-                var jsonStored = JSON.parse(storageData);
-                for (var item in jsonStored) {
-                    if (jsonStored[item].paymentNumber == paymentNumber) {
-                        additionalPaymentAmount = parseFloat(jsonStored[item].additionalPayment);
-                    }
-                }
-            }
-
-            return additionalPaymentAmount;
-        }
-
+        // Typing in a row overrides that payment's extra amount; clearing the box goes back to the presets.
         function additionalPaymentKeyUp(input) {
-            delay(() => {
-                var trs = $("#results tr");
-                $.each(trs, (index, tr) => {
-                    var additionalPaymentAmount = $(tr).find("input").val();
-                    var paymentNumber = parseInt($(tr).find("input").data("pmtnumber"));
-                    var data = {
-                        paymentNumber: paymentNumber,
-                        additionalPayment: isNaN(additionalPaymentAmount) ? 0 : additionalPaymentAmount
-                    };
-
-                    var storageData = localStorage.getItem("additionalPayments");
-
-                    if (storageData && storageData.indexOf('{') > -1) {
-
-                        var jsonStored = JSON.parse(storageData);
-                        var isUpdated = false;
-                        for (var item in jsonStored) {
-                            if (jsonStored[item].paymentNumber == data.paymentNumber) {
-                                jsonStored[item].additionalPayment = data.additionalPayment;
-                                isUpdated = true;
-                            }
-                        }
-                        if (!isUpdated) {
-                            jsonStored.push(data);
-                        }
-                        localStorage.setItem("additionalPayments", JSON.stringify(jsonStored));
-                    } else {
-                        var save = [];
-                        save.push(data);
-                        localStorage.setItem("additionalPayments", JSON.stringify(save));
-                    }
-
-                    storageData = localStorage.getItem("additionalPayments");
-
-                    console.log(storageData);
-
-                });
-                
-
+            delay(function () {
+                var loan = readInputs();
+                if (validate(loan)) return;
+                var store = loadStore();
+                store.rows = store.rows || {};
+                var key = loanKey(loan);
+                var rows = store.rows[key] || {};
+                var n = $(input).data('pmtnumber');
+                if (String(input.value).trim() === '') delete rows[n];
+                else rows[n] = parseExtra(input.value);
+                store.rows[key] = rows;
+                saveStore(store);
                 Calculate();
-            }, 1000)
+            }, 800);
         }
 
-        function getFormattedDate(date) {
-            var year = date.getFullYear();
-            var month = (1 + date.getMonth()).toString().padStart(2, '0');
-            var day = date.getDate().toString().padStart(2, '0');
-
-            return month + '/' + day + '/' + year;
+        function ClearExtras() {
+            $('#ExtraMonthly, #ExtraYearly, #ExtraLump, #ExtraLumpAt').val('');
+            var loan = readInputs();
+            var store = loadStore();
+            if (store.rows) delete store.rows[loanKey(loan)];
+            saveStore(store);
+            Calculate();
         }
+
+        $(function () {
+            var saved = loadStore().inputs;
+            if (saved) {
+                $('#LoanAmount').val(saved.amount); $('#InterestRate').val(saved.rate); $('#Term').val(saved.term);
+                $('#TermUnit').val(saved.unit || 'years'); $('#PaymentDate').val(saved.date || todayIso());
+                $('#ExtraMonthly').val(saved.extraMonthly); $('#ExtraYearly').val(saved.extraYearly);
+                $('#ExtraLump').val(saved.extraLump); $('#ExtraLumpAt').val(saved.extraLumpAt);
+            } else {
+                $('#PaymentDate').val(todayIso());
+            }
+            $('.loan-input').on('input change', function () { delay(Calculate, 500); });
+            Calculate();
+        });
 
         var tableToExcel = (function () {
             var uri = 'data:application/vnd.ms-excel;base64,'
