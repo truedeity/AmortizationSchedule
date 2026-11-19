@@ -13,6 +13,8 @@ Nothing fancy here just a static html site
 - Shows how much earlier the loan is paid off and how much interest the extra payments save
 - Remembers your last loan in the browser; extra payments are kept per loan
 - Dark theme by default, with a light/dark toggle
+- Works on phones: each payment shows as a card on small screens
+- Bootstrap 5.3, no jQuery
 - Export the schedule to Excel
 
 ## Demo

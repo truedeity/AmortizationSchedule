@@ -1,195 +1,150 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Amortization Schedule</title>
-    <!-- CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
-        integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
-
-    <!-- jQuery and JS bundle w/ Popper.js -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
-        crossorigin="anonymous"></script>
     <script>
         // Dark by default; the toggle button remembers a light choice.
-        try { if (localStorage.getItem('theme') !== 'light') document.documentElement.setAttribute('data-theme', 'dark'); }
-        catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+        try { if (localStorage.getItem('theme') === 'light') document.documentElement.setAttribute('data-bs-theme', 'light'); } catch (e) { }
     </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <script src="dateStuff.js"></script>
     <style>
-        td {
-            font-weight: bold;
-        }
-        table thead {
-            background-color: #ccc;
-        }
-        .summary td { font-weight: normal; }
-        .summary span { font-weight: bold; }
-        .extras { border: 1px solid #dee2e6; border-radius: .4rem; padding: .75rem .75rem .25rem; }
-        .extras-title { font-weight: bold; margin-bottom: .5rem; }
-        .extras-title small { font-weight: normal; opacity: .7; }
-        #ExtraLump { min-width: 5.5rem; }
-        .savings { color: #1e7e34; margin: .25rem 0 .5rem; }
-        #results input.typed { border-color: #17a2b8; }
-        .theme-toggle {
-            margin-left: 1rem;
-            padding: .1rem .55rem;
-        }
+        h1 { font-weight: 300; }
+        .summary td { padding: .45rem .5rem; }
+        .summary b { float: right; }
+        .extras-title small { opacity: .7; }
+        .savings { color: var(--bs-success-text-emphasis); }
+        #ExtraLumpAt { flex: 0 0 4.5rem; }
+        #ExtraLump { flex: 1 1 4rem; }
+        #results td, #results th { font-weight: 600; vertical-align: middle; white-space: nowrap; }
+        #results thead th { background-color: var(--bs-secondary-bg); }
+        #results input { min-width: 6rem; }
+        #results input.typed { border-color: var(--bs-info); }
 
-        /* Dark theme */
-        html[data-theme="dark"] { color-scheme: dark; }
-        html[data-theme="dark"] body { background-color: #121418; color: #e4e6eb; }
-        html[data-theme="dark"] a { color: #6cb6ff; }
-        html[data-theme="dark"] .table { color: #e4e6eb; }
-        html[data-theme="dark"] .table td, html[data-theme="dark"] .table th { border-top-color: #2c3038; }
-        html[data-theme="dark"] table thead { background-color: #262a33; }
-        html[data-theme="dark"] #results tbody tr:nth-child(even) { background-color: #181b21; }
-        html[data-theme="dark"] .input-group-text { background-color: #262a33; color: #c9ccd3; border-color: #3a3f4b; }
-        html[data-theme="dark"] .form-control { background-color: #1b1e24; color: #e4e6eb; border-color: #3a3f4b; }
-        html[data-theme="dark"] .form-control:focus { background-color: #1b1e24; color: #e4e6eb; border-color: #6cb6ff; box-shadow: 0 0 0 .2rem rgba(108, 182, 255, .25); }
-        html[data-theme="dark"] .btn-secondary { background-color: #3a3f4b; border-color: #3a3f4b; }
-        html[data-theme="dark"] .extras { border-color: #2c3038; }
-        html[data-theme="dark"] .savings { color: #5fd38d; }
-        html[data-theme="dark"] .custom-select { background-color: #262a33; color: #c9ccd3; border-color: #3a3f4b; }
-        html[data-theme="dark"] .alert-danger { background-color: #3a1d20; color: #ffb3b8; border-color: #5c2a30; }
-        html[data-theme="dark"] .btn-outline-secondary { color: #c9ccd3; border-color: #3a3f4b; }
+        /* Phones: each payment becomes a small card instead of a 7-column row. */
+        @media (max-width: 767.98px) {
+            h1 { font-size: 1.6rem; }
+            #results thead { display: none; }
+            #results, #results tbody, #results tr, #results td { display: block; width: 100%; }
+            #results tr { border: 1px solid var(--bs-border-color); border-radius: .5rem; margin-bottom: .6rem; padding: .35rem .75rem; }
+            #results tr.opening { border-style: dashed; }
+            #results td { border: 0; padding: .2rem 0; display: flex; justify-content: space-between; align-items: center; gap: 1rem; white-space: normal; }
+            #results td::before { content: attr(data-label); font-weight: 400; color: var(--bs-secondary-color); }
+            #results td:empty { display: none; }
+            #results td.num { font-size: 1.05rem; border-bottom: 1px solid var(--bs-border-color); padding-bottom: .35rem; margin-bottom: .2rem; }
+            #results input { max-width: 9rem; text-align: right; }
+        }
     </style>
-
-    <script src="dateStuff.js" type="text/javascript"></script>
-
-
 </head>
 
 <body>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <span class="float-left">
-                    <a href="https://github.com/truedeity/AmortizationSchedule">GITHUB</a>
-                </span>
-                <h1 class="float-right">Amortization Schedule
-                    <button type="button" id="themeToggle" class="btn btn-sm btn-outline-secondary theme-toggle"
-                        onclick="toggleTheme()" title="Switch light/dark theme"></button>
-                </h1>
-            </div>
+    <div class="container py-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="https://github.com/truedeity/AmortizationSchedule">GITHUB</a>
+            <h1 class="mb-0">Amortization Schedule
+                <button type="button" id="themeToggle" class="btn btn-sm btn-outline-secondary ms-2 align-middle"
+                    title="Switch light/dark theme"></button>
+            </h1>
         </div>
 
         <div class="row">
             <div class="col-md-4">
                 <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">Loan Amount:</span>
-                    </div>
-                    <input type="text" class="form-control loan-input" id="LoanAmount" value="10,000" inputmode="decimal" />
+                    <span class="input-group-text">Loan Amount:</span>
+                    <input type="text" class="form-control loan-input" id="LoanAmount" value="10,000" inputmode="decimal">
                 </div>
                 <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">Interest Rate:</span>
-                    </div>
-                    <input type="text" class="form-control loan-input" id="InterestRate" value="3.5" inputmode="decimal" />
-                    <div class="input-group-append"><span class="input-group-text">%</span></div>
+                    <span class="input-group-text">Interest Rate:</span>
+                    <input type="text" class="form-control loan-input" id="InterestRate" value="3.5" inputmode="decimal">
+                    <span class="input-group-text">%</span>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">Term:</span>
-                    </div>
-                    <input type="number" class="form-control loan-input" id="Term" value="1" min="1" step="1" />
-                    <div class="input-group-append">
-                        <select class="custom-select loan-input" id="TermUnit">
-                            <option value="years">years</option>
-                            <option value="months">months</option>
-                        </select>
-                    </div>
+                    <span class="input-group-text">Term:</span>
+                    <input type="number" class="form-control loan-input" id="Term" value="1" min="1" step="1">
+                    <select class="form-select loan-input" id="TermUnit" style="flex: 0 0 7rem;">
+                        <option value="years">years</option>
+                        <option value="months">months</option>
+                    </select>
                 </div>
                 <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">Loan Date:</span>
-                    </div>
-                    <input type="date" class="form-control loan-input" id="PaymentDate" />
-                    &nbsp;
-                    <button id="calculate" class="btn btn-secondary" onclick="Calculate()">Calculate</button>
+                    <span class="input-group-text">Loan Date:</span>
+                    <input type="date" class="form-control loan-input" id="PaymentDate">
+                    <button id="calculate" class="btn btn-secondary">Calculate</button>
                 </div>
             </div>
             <div class="col-md-4">
-                <table class="table summary">
-                    <tr><td>Payment Amount: <span class="float-right" id="paymentAmt"></span></td></tr>
-                    <tr><td>Rate Per Period: <span class="float-right" id="ratePerPeriod"></span></td></tr>
-                    <tr><td>Total Interest: <span class="float-right" id="totalInterest"></span></td></tr>
-                    <tr><td>Payoff Date: <span class="float-right" id="payoffDate"></span></td></tr>
+                <table class="table summary mb-3">
+                    <tr><td>Payment Amount: <b id="paymentAmt"></b></td></tr>
+                    <tr><td>Rate Per Period: <b id="ratePerPeriod"></b></td></tr>
+                    <tr><td>Total Interest: <b id="totalInterest"></b></td></tr>
+                    <tr><td>Payoff Date: <b id="payoffDate"></b></td></tr>
                 </table>
             </div>
         </div>
 
-        <div class="extras mb-3">
-            <div class="extras-title">Extra payments <small>(on top of the regular payment; you can also type an amount into any row below)</small>
-                <button type="button" class="btn btn-sm btn-outline-secondary float-right" onclick="ClearExtras()">Clear extras</button>
+        <div class="border rounded p-3 pb-2 mb-3">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <div class="fw-bold extras-title">Extra payments
+                    <small class="fw-normal">(on top of the regular payment; you can also type an amount into any row below)</small></div>
+                <button type="button" id="clearExtras" class="btn btn-sm btn-outline-secondary flex-shrink-0">Clear extras</button>
             </div>
             <div class="row">
                 <div class="col-md-3">
                     <div class="input-group mb-2">
-                        <div class="input-group-prepend"><span class="input-group-text">Every month +$</span></div>
-                        <input type="text" class="form-control loan-input" id="ExtraMonthly" placeholder="0" inputmode="decimal" />
+                        <span class="input-group-text">Every month +$</span>
+                        <input type="text" class="form-control loan-input" id="ExtraMonthly" placeholder="0" inputmode="decimal">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="input-group mb-2">
-                        <div class="input-group-prepend"><span class="input-group-text">Once a year +$</span></div>
-                        <input type="text" class="form-control loan-input" id="ExtraYearly" placeholder="0" inputmode="decimal" />
+                        <span class="input-group-text">Once a year +$</span>
+                        <input type="text" class="form-control loan-input" id="ExtraYearly" placeholder="0" inputmode="decimal">
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="input-group mb-2">
-                        <div class="input-group-prepend"><span class="input-group-text">One time +$</span></div>
-                        <input type="text" class="form-control loan-input" id="ExtraLump" placeholder="0" inputmode="decimal" />
-                        <div class="input-group-prepend input-group-append"><span class="input-group-text">at payment #</span></div>
-                        <input type="number" class="form-control loan-input" id="ExtraLumpAt" placeholder="1" min="1" step="1" style="flex: 0 0 5rem;" />
+                        <span class="input-group-text">One time +$</span>
+                        <input type="text" class="form-control loan-input" id="ExtraLump" placeholder="0" inputmode="decimal">
+                        <span class="input-group-text">at<span class="d-none d-sm-inline">&nbsp;payment</span>&nbsp;#</span>
+                        <input type="number" class="form-control loan-input" id="ExtraLumpAt" placeholder="1" min="1" step="1">
                     </div>
                 </div>
             </div>
-            <div id="savings" class="savings" hidden></div>
+            <div id="savings" class="savings mb-2" hidden></div>
         </div>
 
         <div id="error" class="alert alert-danger" hidden></div>
 
-        <div class="row">
-            <div class="col-md-12">
-                <table id="results" class="table ">
-                    <thead>
-                        <tr>
-                            <td>No.</td>
-                            <td>Due Date</td>
-                            <td>Payment Due</td>
-                            <td>Additional Payment</td>
-                            <td>Interest</td>
-                            <td>Principal</td>
-                            <td>Balance</td>
-                        </tr>
-                    </thead>
-                    <tbody>
+        <table id="results" class="table">
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Due Date</th>
+                    <th>Payment Due</th>
+                    <th>Additional Payment</th>
+                    <th>Interest</th>
+                    <th>Principal</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
 
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <a id="dlink" style="display:none;"></a>
-
-        <input type="button" id="exportBtn" class="btn btn-info" disabled="disabled"
-            onclick="tableToExcel('results', 'Amortization Schedule', 'Amortization.xls')" value="Export to Excel">
+        <button type="button" id="exportBtn" class="btn btn-info" disabled>Export to Excel</button>
     </div>
 
-
-    <script type="text/javascript">
-
+    <script>
         var formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
         var STORE_KEY = 'amortization-v2';
+        var lastPlan = null;
+
+        function $(id) { return document.getElementById(id); }
+        function val(id) { return $(id).value; }
 
         function loadStore() {
             try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
@@ -227,17 +182,16 @@
         }
 
         function readInputs() {
-            var term = parseNumber($('#Term').val());
-            var unit = $('#TermUnit').val();
+            var term = parseNumber(val('Term'));
             return {
-                amount: parseNumber($('#LoanAmount').val()),
-                rate: parseNumber($('#InterestRate').val()),
-                months: unit === 'months' ? Math.round(term) : Math.round(term * 12),
-                date: $('#PaymentDate').val(),
-                extraMonthly: parseExtra($('#ExtraMonthly').val()),
-                extraYearly: parseExtra($('#ExtraYearly').val()),
-                extraLump: parseExtra($('#ExtraLump').val()),
-                extraLumpAt: Math.round(parseNumber($('#ExtraLumpAt').val())) || 1
+                amount: parseNumber(val('LoanAmount')),
+                rate: parseNumber(val('InterestRate')),
+                months: val('TermUnit') === 'months' ? Math.round(term) : Math.round(term * 12),
+                date: val('PaymentDate'),
+                extraMonthly: parseExtra(val('ExtraMonthly')),
+                extraYearly: parseExtra(val('ExtraYearly')),
+                extraLump: parseExtra(val('ExtraLump')),
+                extraLumpAt: Math.round(parseNumber(val('ExtraLumpAt'))) || 1
             };
         }
 
@@ -285,58 +239,65 @@
                 totalInterest += interest;
                 rows.push({ n: n, date: addMonths(start, n), due: due, extra: extra, interest: interest, principal: principal + extra, balance: balance });
             }
-            return { payment: payment, ratePerPeriod: i * 100, totalInterest: totalInterest, rows: rows };
+            return { payment: payment, ratePerPeriod: i * 100, totalInterest: totalInterest, rows: rows, amount: loan.amount };
+        }
+
+        function cell(label, html, cls) {
+            return '<td data-label="' + label + '"' + (cls ? ' class="' + cls + '"' : '') + '>' + html + '</td>';
         }
 
         function Calculate() {
             var loan = readInputs();
             var error = validate(loan);
-            $('#error').text(error).prop('hidden', !error);
+            $('error').textContent = error;
+            $('error').hidden = !error;
             if (error) return;
 
             var store = loadStore();
             store.inputs = {
-                amount: $('#LoanAmount').val(), rate: $('#InterestRate').val(), term: $('#Term').val(), unit: $('#TermUnit').val(),
-                date: $('#PaymentDate').val(), extraMonthly: $('#ExtraMonthly').val(), extraYearly: $('#ExtraYearly').val(),
-                extraLump: $('#ExtraLump').val(), extraLumpAt: $('#ExtraLumpAt').val()
+                amount: val('LoanAmount'), rate: val('InterestRate'), term: val('Term'), unit: val('TermUnit'),
+                date: val('PaymentDate'), extraMonthly: val('ExtraMonthly'), extraYearly: val('ExtraYearly'),
+                extraLump: val('ExtraLump'), extraLumpAt: val('ExtraLumpAt')
             };
             saveStore(store);
 
             var plan = buildSchedule(loan, true);
             var base = buildSchedule(loan, false);
             var overrides = rowOverrides(loan);
+            lastPlan = plan;
 
-            var tbody = $('#results tbody').empty();
-            tbody.append("<tr><td colspan='6'></td><td style='font-weight:bold;'>" + formatter.format(loan.amount) + "</td></tr>");
+            var html = '<tr class="opening"><td colspan="6"></td>' + cell('Starting balance', formatter.format(loan.amount)) + '</tr>';
             plan.rows.forEach(function (r) {
                 var typed = overrides[r.n] !== undefined;
-                tbody.append('<tr>' +
-                    '<td>' + r.n + '</td>' +
-                    '<td>' + getFormattedDate(r.date) + '</td>' +
-                    '<td>' + formatter.format(r.due) + '</td>' +
-                    "<td><input type='text' inputmode='decimal' class='form-control" + (typed ? " typed" : "") + "' data-pmtnumber='" + r.n +
-                    "' onkeyup='additionalPaymentKeyUp(this)' value='" + (r.extra ? r.extra.toFixed(2) : '0') + "'></td>" +
-                    '<td>' + formatter.format(r.interest) + '</td>' +
-                    '<td>' + formatter.format(r.principal) + '</td>' +
-                    '<td>' + formatter.format(r.balance) + '</td>' +
-                    '</tr>');
+                html += '<tr>' +
+                    cell('Payment', r.n, 'num') +
+                    cell('Due date', getFormattedDate(r.date)) +
+                    cell('Payment due', formatter.format(r.due)) +
+                    cell('Additional payment', '<input type="text" inputmode="decimal" class="form-control form-control-sm' +
+                        (typed ? ' typed' : '') + '" data-pmtnumber="' + r.n + '" value="' + (r.extra ? r.extra.toFixed(2) : '0') + '">') +
+                    cell('Interest', formatter.format(r.interest)) +
+                    cell('Principal', formatter.format(r.principal)) +
+                    cell('Balance', formatter.format(r.balance)) +
+                    '</tr>';
             });
+            document.querySelector('#results tbody').innerHTML = html;
 
             var last = plan.rows[plan.rows.length - 1];
-            $('#paymentAmt').text(formatter.format(plan.payment));
-            $('#ratePerPeriod').text(plan.ratePerPeriod.toFixed(3) + '%');
-            $('#totalInterest').text(formatter.format(plan.totalInterest));
-            $('#payoffDate').text(getFormattedDate(last.date) + ' (' + plural(plan.rows.length, 'payment') + ')');
+            $('paymentAmt').textContent = formatter.format(plan.payment);
+            $('ratePerPeriod').textContent = plan.ratePerPeriod.toFixed(3) + '%';
+            $('totalInterest').textContent = formatter.format(plan.totalInterest);
+            $('payoffDate').textContent = getFormattedDate(last.date) + ' (' + plural(plan.rows.length, 'payment') + ')';
 
             var monthsSaved = base.rows.length - plan.rows.length;
             var interestSaved = base.totalInterest - plan.totalInterest;
             if (interestSaved > 0.005) {
-                $('#savings').html('With extra payments: paid off <b>' + plural(monthsSaved, 'month') + ' early</b> on <b>' +
-                    getFormattedDate(last.date) + '</b> &middot; <b>' + formatter.format(interestSaved) + '</b> interest saved').prop('hidden', false);
+                $('savings').innerHTML = 'With extra payments: paid off <b>' + plural(monthsSaved, 'month') + ' early</b> on <b>' +
+                    getFormattedDate(last.date) + '</b> &middot; <b>' + formatter.format(interestSaved) + '</b> interest saved';
+                $('savings').hidden = false;
             } else {
-                $('#savings').prop('hidden', true);
+                $('savings').hidden = true;
             }
-            $('#exportBtn').prop('disabled', false);
+            $('exportBtn').disabled = false;
         }
 
         var delay = (function () {
@@ -348,7 +309,9 @@
         })();
 
         // Typing in a row overrides that payment's extra amount; clearing the box goes back to the presets.
-        function additionalPaymentKeyUp(input) {
+        document.querySelector('#results tbody').addEventListener('input', function (e) {
+            var input = e.target;
+            if (!input.matches('input[data-pmtnumber]')) return;
             delay(function () {
                 var loan = readInputs();
                 if (validate(loan)) return;
@@ -356,68 +319,73 @@
                 store.rows = store.rows || {};
                 var key = loanKey(loan);
                 var rows = store.rows[key] || {};
-                var n = $(input).data('pmtnumber');
+                var n = input.dataset.pmtnumber;
                 if (String(input.value).trim() === '') delete rows[n];
                 else rows[n] = parseExtra(input.value);
                 store.rows[key] = rows;
                 saveStore(store);
                 Calculate();
             }, 800);
-        }
+        });
 
         function ClearExtras() {
-            $('#ExtraMonthly, #ExtraYearly, #ExtraLump, #ExtraLumpAt').val('');
-            var loan = readInputs();
+            ['ExtraMonthly', 'ExtraYearly', 'ExtraLump', 'ExtraLumpAt'].forEach(function (id) { $(id).value = ''; });
             var store = loadStore();
-            if (store.rows) delete store.rows[loanKey(loan)];
+            if (store.rows) delete store.rows[loanKey(readInputs())];
             saveStore(store);
             Calculate();
         }
 
-        $(function () {
-            var saved = loadStore().inputs;
-            if (saved) {
-                $('#LoanAmount').val(saved.amount); $('#InterestRate').val(saved.rate); $('#Term').val(saved.term);
-                $('#TermUnit').val(saved.unit || 'years'); $('#PaymentDate').val(saved.date || todayIso());
-                $('#ExtraMonthly').val(saved.extraMonthly); $('#ExtraYearly').val(saved.extraYearly);
-                $('#ExtraLump').val(saved.extraLump); $('#ExtraLumpAt').val(saved.extraLumpAt);
-            } else {
-                $('#PaymentDate').val(todayIso());
-            }
-            $('.loan-input').on('input change', function () { delay(Calculate, 500); });
-            Calculate();
-        });
+        // Excel export of the plain numbers (the on-screen table has input boxes in it).
+        function exportToExcel() {
+            if (!lastPlan) return;
+            var template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>';
+            var rows = '<tr><td>No.</td><td>Due Date</td><td>Payment Due</td><td>Additional Payment</td><td>Interest</td><td>Principal</td><td>Balance</td></tr>' +
+                '<tr><td colspan="6"></td><td>' + formatter.format(lastPlan.amount) + '</td></tr>';
+            lastPlan.rows.forEach(function (r) {
+                rows += '<tr><td>' + r.n + '</td><td>' + getFormattedDate(r.date) + '</td><td>' + formatter.format(r.due) + '</td><td>' +
+                    formatter.format(r.extra) + '</td><td>' + formatter.format(r.interest) + '</td><td>' + formatter.format(r.principal) +
+                    '</td><td>' + formatter.format(r.balance) + '</td></tr>';
+            });
+            var content = template.replace(/{(\w+)}/g, function (m, p) { return { worksheet: 'Amortization Schedule', table: rows }[p]; });
+            var link = document.createElement('a');
+            link.href = 'data:application/vnd.ms-excel;base64,' + window.btoa(unescape(encodeURIComponent(content)));
+            link.download = 'Amortization.xls';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }
 
-        var tableToExcel = (function () {
-            var uri = 'data:application/vnd.ms-excel;base64,'
-                , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
-                , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
-                , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
-            return function (table, name, filename) {
-                if (!table.nodeType) table = document.getElementById(table)
-                var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
-
-                document.getElementById("dlink").href = uri + base64(format(template, ctx));
-                document.getElementById("dlink").download = filename;
-                document.getElementById("dlink").click();
-
-            }
-        })()
-
-    </script>
-    <script>
         function setThemeIcon() {
-            var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-            document.getElementById('themeToggle').textContent = dark ? '\u2600\uFE0F' : '\uD83C\uDF19';
+            var dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            $('themeToggle').textContent = dark ? '☀️' : '🌙';
         }
         function toggleTheme() {
-            var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-            if (dark) document.documentElement.removeAttribute('data-theme');
-            else document.documentElement.setAttribute('data-theme', 'dark');
+            var dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            document.documentElement.setAttribute('data-bs-theme', dark ? 'light' : 'dark');
             try { localStorage.setItem('theme', dark ? 'light' : 'dark'); } catch (e) { }
             setThemeIcon();
         }
+
+        var saved = loadStore().inputs;
+        if (saved) {
+            $('LoanAmount').value = saved.amount; $('InterestRate').value = saved.rate; $('Term').value = saved.term;
+            $('TermUnit').value = saved.unit || 'years'; $('PaymentDate').value = saved.date || todayIso();
+            $('ExtraMonthly').value = saved.extraMonthly || ''; $('ExtraYearly').value = saved.extraYearly || '';
+            $('ExtraLump').value = saved.extraLump || ''; $('ExtraLumpAt').value = saved.extraLumpAt || '';
+        } else {
+            $('PaymentDate').value = todayIso();
+        }
+        document.querySelectorAll('.loan-input').forEach(function (el) {
+            el.addEventListener('input', function () { delay(Calculate, 500); });
+            el.addEventListener('change', function () { delay(Calculate, 500); });
+        });
+        $('calculate').addEventListener('click', Calculate);
+        $('clearExtras').addEventListener('click', ClearExtras);
+        $('exportBtn').addEventListener('click', exportToExcel);
+        $('themeToggle').addEventListener('click', toggleTheme);
         setThemeIcon();
+        Calculate();
     </script>
 </body>
 
